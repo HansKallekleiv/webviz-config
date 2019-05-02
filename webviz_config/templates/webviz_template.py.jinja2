@@ -47,7 +47,9 @@ tab_active_style = {
 'background-color': 'var(--menuLinkBackgroundSelected)',
 'color': 'var(--menuLinkColorSelected)',
 }
-
+plotly_layout = {{ plotly_layout }}
+pageS = {{pages}}
+print(pageS)
 app.layout = dcc.Tabs(parent_className="layoutWrapper",
                       content_className='pageWrapper',
                       vertical=True, children=[
@@ -70,12 +72,30 @@ app.layout = dcc.Tabs(parent_className="layoutWrapper",
 
             children=[
                  {% for content in page.content -%}
-                  {%- if content is string -%}
+                  {%- if 'tabs' in content -%}
+                   dcc.Tabs(id='{{page.id}}+-tabs', children=[
+                     {% for tab in content.tabs %}
+                      dcc.Tab(id='{{page.id+loop.index|string}}',
+                              label='{{tab.title}}',
+                              children=[
+                               {% for tab_content in tab.content%}
+                                 {%- if tab_content is string -%}
+                                  dcc.Markdown(r'''{{ tab_content }}''')
+                                 {%- else -%}
+                                  {{ tab_content._call_signature }}.layout
+                                 {%- endif -%}
+                                {{- '' if loop.last else ','}}
+                            {%- endfor -%}])
+                            {{- '' if loop.last else ',' -}}
+                            {%- endfor -%}
+                            ])
+                  {%- elif content is string -%}
                     dcc.Markdown(r'''{{ content }}''')
                   {%- else -%}
                     {{ content._call_signature }}.layout
                   {%- endif -%}
                   {{- '' if loop.last else ','}}
+
                  {% endfor -%}
                  ]
     ){{- '' if loop.last else ',' -}}

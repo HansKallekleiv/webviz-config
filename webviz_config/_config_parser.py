@@ -6,7 +6,7 @@ import importlib
 import yaml
 from . import containers as standard_containers
 
-SPECIAL_ARGS = ['self', 'app', 'container_settings',
+SPECIAL_ARGS = ['self', 'app', 'plotly_layout', 'container_settings',
                 '_call_signature', '_imports']
 
 
@@ -80,6 +80,8 @@ def call_signature(module, module_name, container_name,
     special_args = ''
     if 'app' in argspec.args:
         special_args += 'app=app, '
+    if 'plotly_layout' in argspec.args:
+        special_args += 'plotly_layout=plotly_layout, '
 
     if 'container_settings' in argspec.args:
         kwargs['container_settings'] = container_settings
@@ -111,6 +113,7 @@ class ConfigParser:
 
         self._config_folder = pathlib.Path(yaml_file).parent
         self._page_ids = []
+        self.container_settings = {}
         self.clean_configuration()
 
     def _generate_page_id(self, title):
@@ -130,6 +133,104 @@ class ConfigParser:
 
         return page_id
 
+    def add_container(self, container):
+        if 'container' not in container:
+            raise ParserError('\033[91m'
+                              'Argument `container`, stating name of '
+                              'the container to include, is required.'
+                              '\033[0m')
+
+        kwargs = {**container}
+        container_name = kwargs.pop('container')
+
+        if '.' not in container_name:
+            if container_name not in ConfigParser.STANDARD_CONTAINERS:
+                raise ParserError(
+                              '\033[91m'
+                              'You have included an container with '
+                              f'name `{container_name}` in your '
+                              'configuration file. This is not a '
+                              'standard container.'
+                              '\033[0m')
+            else:
+                self.configuration['_imports']\
+                 .add(('webviz_config.containers',
+                       'standard_containers'))
+
+                container['_call_signature'] = call_signature(
+                                                standard_containers,
+                                                'standard_containers',
+                                                container_name,
+                                                self.container_settings,
+                                                kwargs,
+                                                self._config_folder
+                                                             )
+        else:
+            parts = container_name.split('.')
+
+            container_name = parts[-1]
+            module_name = ".".join(parts[:-1])
+            module = importlib.import_module(module_name)
+
+            if container_name not in get_class_members(module):
+                raise ParserError('\033[91m'
+                                  f'Module `{module}` does not have a '
+                                  f'container named `{container_name}`'
+                                  '\033[0m')
+            else:
+                self.configuration['_imports'].add(module_name)
+                container['_call_signature'] = call_signature(
+                                                    module,
+                                                    module_name,
+                                                    container_name,
+                                                    self.container_settings,
+                                                    kwargs,
+                                                    self._config_folder
+                                                             )
+    def clean_page(self, page_number, page, tabs=True):
+        if 'title' not in page:
+            raise ParserError('\033[91m'
+                              f'Page number {page_number + 1} does '
+                              'not have the title specified.'
+                              '\033[0m')
+
+        if 'id' not in page:
+            page['id'] = self._generate_page_id(page['title'])
+        elif page['id'] in self._page_ids:
+            raise ParserError('\033[91m'
+                              'You have more than one page '
+                              'with the same `id`.'
+                              '\033[0m')
+
+        self._page_ids.append(page['id'])
+
+        if 'content' not in page:
+            page['content'] = []
+        elif not isinstance(page['content'], list) and page['content'] is not 'tabs':
+            raise ParserError('\033[91m'
+                              'The content of page number '
+                              f'{page_number + 1} should be a list.'
+                              '\033[0m')
+
+        containers = []
+        for e in page['content']:
+            if isinstance(e, dict):
+                if'tabs' in e:
+                    if not isinstance(e['tabs'], list):
+                        raise ParserError('\033[91m'
+                                      'The configuration input belonging to the '
+                                      '`pages` keyword should be a list.'
+                                      '\033[0m')
+
+                    for tab in e['tabs']:
+                        self.clean_page(page_number, tab)
+                else:
+                    self.add_container(e)
+        # containers = [e for e in page['content'] if isinstance(e, dict)]
+
+        # for container in containers:
+
+
     def clean_configuration(self):
         '''Various cleaning and checks of the raw configuration read
         from the user provided yaml configuration file.
@@ -137,10 +238,8 @@ class ConfigParser:
 
         self.configuration['_imports'] = set()
 
-        if 'container_settings' not in self.configuration:
-            container_settings = {}
-        else:
-            container_settings = self.configuration['container_settings']
+        if 'container_settings' in self.configuration:
+            self.container_settings = self.configuration['container_settings']
 
         for mandatory_key in ['password', 'username']:
             if mandatory_key not in self.configuration:
@@ -164,87 +263,8 @@ class ConfigParser:
                               '\033[0m')
 
         for page_number, page in enumerate(self.configuration['pages']):
+            self.clean_page(page_number, page)
 
-            if 'title' not in page:
-                raise ParserError('\033[91m'
-                                  f'Page number {page_number + 1} does '
-                                  'not have the title specified.'
-                                  '\033[0m')
-
-            if 'id' not in page:
-                page['id'] = self._generate_page_id(page['title'])
-            elif page['id'] in self._page_ids:
-                raise ParserError('\033[91m'
-                                  'You have more than one page '
-                                  'with the same `id`.'
-                                  '\033[0m')
-
-            self._page_ids.append(page['id'])
-
-            if 'content' not in page:
-                page['content'] = []
-            elif not isinstance(page['content'], list):
-                raise ParserError('\033[91m'
-                                  'The content of page number '
-                                  f'{page_number + 1} should be a list.'
-                                  '\033[0m')
-
-            containers = [e for e in page['content'] if isinstance(e, dict)]
-
-            for container in containers:
-                if 'container' not in container:
-                    raise ParserError('\033[91m'
-                                      'Argument `container`, stating name of '
-                                      'the container to include, is required.'
-                                      '\033[0m')
-
-                kwargs = {**container}
-                container_name = kwargs.pop('container')
-
-                if '.' not in container_name:
-                    if container_name not in ConfigParser.STANDARD_CONTAINERS:
-                        raise ParserError(
-                                      '\033[91m'
-                                      'You have included an container with '
-                                      f'name `{container_name}` in your '
-                                      'configuration file. This is not a '
-                                      'standard container.'
-                                      '\033[0m')
-                    else:
-                        self.configuration['_imports']\
-                         .add(('webviz_config.containers',
-                               'standard_containers'))
-
-                        container['_call_signature'] = call_signature(
-                                                        standard_containers,
-                                                        'standard_containers',
-                                                        container_name,
-                                                        container_settings,
-                                                        kwargs,
-                                                        self._config_folder
-                                                                     )
-                else:
-                    parts = container_name.split('.')
-
-                    container_name = parts[-1]
-                    module_name = ".".join(parts[:-1])
-                    module = importlib.import_module(module_name)
-
-                    if container_name not in get_class_members(module):
-                        raise ParserError('\033[91m'
-                                          f'Module `{module}` does not have a '
-                                          f'container named `{container_name}`'
-                                          '\033[0m')
-                    else:
-                        self.configuration['_imports'].add(module_name)
-                        container['_call_signature'] = call_signature(
-                                                            module,
-                                                            module_name,
-                                                            container_name,
-                                                            container_settings,
-                                                            kwargs,
-                                                            self._config_folder
-                                                                     )
 
     @property
     def configuration(self):

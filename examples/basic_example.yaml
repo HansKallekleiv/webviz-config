@@ -10,14 +10,39 @@ pages:
 
  - title: Front page
    content:
-    - container: BannerImage
-      image: ./example_banner.png
-      title: My banner image
     - Webviz created from configuration file.
 
- - title: Another page
+ - title: Some stuff
    content:
-    - Some other text, potentially with strange letters like Åre, Smørbukk Sør.
+     - tabs:
+        - title: first tab
+          content:
+           - container: DataTable
+             csv_file: ./example_data.csv
+             filtering: True
+        - title: second tab
+          content:
+           - Some other text, potentially with strange letters like Åre, Smørbukk Sør.
+        - title: first tab
+          content:
+           - container: DataTable
+             csv_file: ./example_data.csv
+             filtering: True
+        - title: second tab
+          content:
+           - Some other text, potentially with strange letters like Åre, Smørbukk Sør.
+        - title: first tab
+          content:
+           - container: DataTable
+             csv_file: ./example_data.csv
+             filtering: True
+        - title: second tab
+          content:
+           - Some other text, potentially with strange letters like Åre, Smørbukk Sør.
+        - title: Syntax highlighting example
+          content:
+           - container: SyntaxHighlighter
+             filename: ./basic_example.yaml
 
  - title: Table example
    content:
@@ -29,21 +54,3 @@ pages:
    content:
     - container: SyntaxHighlighter
       filename: ./basic_example.yaml
-
- - title: Plot a table
-   content:
-    - container: TablePlotter
-      title: Plotter
-      csv_file: ./example_data.csv
-
- - title: Plot a table (locked)
-   content:
-    - container: TablePlotter
-      title: Initial reservoir pressure
-      csv_file: ./example_data.csv
-      lock: true
-      plot_options:
-        x: Well
-        y: Initial reservoir pressure (bar)
-        size: Average permeability (D)
-        facet_col: Segment

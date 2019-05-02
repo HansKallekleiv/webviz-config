@@ -40,6 +40,7 @@ class WebvizConfigTheme:
         self._feature_policy = FEATURE_POLICY
         self._external_stylesheets = []
         self._assets = []
+        self._plotly_layout = {}
 
     def adjust_csp(self, dictionary, append=True):
         """If the default CSP settings needs to be changed, this function can
@@ -75,6 +76,15 @@ class WebvizConfigTheme:
         application. The input variable `external_stylesheets` should be
         a list."""
         self._external_stylesheets = external_stylesheets
+
+    @property
+    def plotly_layout(self):
+        return self._plotly_layout
+
+    @plotly_layout.setter
+    def plotly_layout(self, plotly_layout):
+        """Add or modify the layout object of Plotly graph objects"""
+        self._plotly_layout = plotly_layout
 
     @property
     def assets(self):

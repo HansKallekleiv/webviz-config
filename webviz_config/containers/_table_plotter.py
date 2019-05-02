@@ -26,9 +26,10 @@ a database.
           plot options are hidden.
 '''
 
-    def __init__(self, app, title: str, csv_file: Path,
+    def __init__(self, app, plotly_layout, title: str, csv_file: Path,
                  plot_options: dict = None, lock: bool = False):
 
+        self.plotly_layout = plotly_layout
         self.title = title
         self.plot_options = plot_options if plot_options else {}
         self.graph_id = f'graph-id{uuid4()}'
@@ -41,6 +42,22 @@ a database.
         self.selector_row = f'selector-row{uuid4()}'
         self.plot_option_id = f'plot-option{uuid4()}'
         self.set_callbacks(app)
+        self._filters = {}
+        print(self.filters())
+
+    def filters(self):
+        columns = []
+        data = self.data.select_dtypes(include=[np.number])
+        for column in data.columns:
+            columns.append({
+                column: [
+                    data[column].min(),
+                    data[column].max(),
+                    (data[column].max()-data[column].min())/len(data[column].unique())]})
+        return {
+            'name': self.title,
+            'values': columns,
+            'response': 'YEAR' }
 
     def add_webvizstore(self):
         return [(get_data, [{'csv_file': self.csv_file}])]
@@ -115,8 +132,8 @@ a database.
                     'multi': False
                 },
                 'histnorm': {
-                    'options': ['percent', 'propability', 'density',
-                                'propability density'],
+                    'options': ['percent', 'probability', 'density',
+                                'probability density'],
                     'value': self.plot_options.get('histnorm', None),
                     'multi': False
                 },
@@ -256,7 +273,18 @@ a database.
                     div_style.append(self.style_options_div)
                 else:
                     div_style.append(self.style_options_div_hidden)
-            return (plotfunc(self.data, **plotargs), *div_style)
+
+            plot = plotfunc(self.data, **plotargs)
+            print(plotargs)
+            if 'colorway' in self.plotly_layout:
+                for trace in plot['data']:
+                    if 'marker' in trace:
+                        trace['marker']['color'] = None
+                    if 'line' in trace:
+                        trace['line']['color'] = None
+            plot['layout'].update(self.plotly_layout)
+            print(plot)
+            return (plot, *div_style)
 
 
 @cache.memoize(timeout=cache.TIMEOUT)

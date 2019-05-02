@@ -17,13 +17,16 @@
 - Clearing
 - Media Queries
 */
+@import url('https://fonts.googleapis.com/css?family=Lato');
+
 h1, h2, h3, h4, h5, h6, p, a, div, button {
-  font-family: helvetica;
+  font-family: 'Lato', sans-serif;
 }
+
 
 #logo {
   height: 100px;
-  /* width: 200px; */
+  margin: 20px 0px;
   background-size: contain;
   background-image: url("default_logo.svg");
   background-repeat: no-repeat;
@@ -32,7 +35,7 @@ h1, h2, h3, h4, h5, h6, p, a, div, button {
 /* Style Variables
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 :root {
-  --menuLinkFont: helvetica;
+  --menuLinkFont: 'Lato', sans-serif;
   --menuLogoHeight: 75px;
   --menuBackground: #ffffff;
   --menuLinkBackgroundHover: #E5E5E5;
@@ -42,7 +45,7 @@ h1, h2, h3, h4, h5, h6, p, a, div, button {
   --menuLinkFontStyle: normal;
   --menuLinkFontWeight: 500;
   --menuLinkHoverColor: #1D3557;
-  --bannerFontFamily: helvetica;
+  --bannerFontFamily: Raleway;
   --bannerFontWeight: 700;
 }
 

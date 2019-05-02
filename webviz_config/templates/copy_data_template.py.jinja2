@@ -31,12 +31,23 @@ containers = []
 
 {% for page in pages %}
 {% for content in page.content %}
-{% if content is not string %}
+{% if 'tabs' in content %}
+ {% for tab in content.tabs %}
+  {% for tab_content in tab.content %}
+   {%if tab_content is not string %}
+containers.append({{ tab_content._call_signature }})
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+
+
+{% elif content is not string %}
 containers.append({{ content._call_signature }})
 {% endif %}
 {% endfor %}
 {% endfor %}
 
+print(containers)
 for container in containers:
     if hasattr(container, 'add_webvizstore'):
         webviz_storage.register_function_arguments(container.add_webvizstore())
