@@ -17,9 +17,9 @@ pages:
      - tabs:
         - title: first tab
           content:
-           - container: DataTable
-             csv_file: ./example_data.csv
-             filtering: True
+           - container: PdfViewer
+             pdf_file: ./webviz.pdf
+
         - title: second tab
           content:
            - Some other text, potentially with strange letters like Åre, Smørbukk Sør.
@@ -43,7 +43,10 @@ pages:
           content:
            - container: SyntaxHighlighter
              filename: ./basic_example.yaml
-
+ - title: More stuff
+   content:
+    - container: PdfViewer
+      pdf_file: ./some_pdf.pdf
  - title: Table example
    content:
     - container: DataTable
