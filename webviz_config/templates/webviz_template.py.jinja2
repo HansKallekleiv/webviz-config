@@ -76,6 +76,8 @@ app.layout = dcc.Tabs(parent_className="layoutWrapper",
                    dcc.Tabs(id='{{page.id}}+-tabs', children=[
                      {% for tab in content.tabs %}
                       dcc.Tab(id='{{page.id+loop.index|string}}',
+                              selected_style = tab_active_style,
+                              selected_className='selectedButton',
                               label='{{tab.title}}',
                               children=[
                                {% for tab_content in tab.content%}
