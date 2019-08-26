@@ -45,7 +45,8 @@ setup(
         'pandas~=0.24.1',
         'pyarrow~=0.11.1',
         'pyyaml~=5.1',
-        'webviz-core-components~=0.0.3'
+        'webviz-core-components~=0.0.3',
+        'azure-storage-blob'
     ],
     tests_require=tests_requires,
     extras_require={'tests': tests_requires},

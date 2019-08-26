@@ -7,14 +7,20 @@ import inspect
 import pathlib
 import pandas as pd
 from collections import defaultdict
-
+from azure.storage.blob import BlockBlobService
 
 class WebvizStorage:
 
     def __init__(self):
         self._use_storage = False
+        self._use_azure_blob = True
         self.storage_functions = set()
+        print(os.getenv('AZURE_BLOB_ACCOUNT_KEY'))
         self.storage_function_argvalues = defaultdict(set)
+        self.blob_service = BlockBlobService(
+            account_name=str(os.getenv('AZURE_BLOB_ACCOUNT_NAME')),
+            account_key=str(os.getenv('AZURE_BLOB_ACCOUNT_KEY')))
+        self.blob_container = str(os.getenv('AZURE_BLOB_CONTAINER'))
 
     def register_function(self, func):
         '''This function is automatically called by the function
@@ -28,6 +34,7 @@ class WebvizStorage:
                                       'and file resources are implemented.')
 
         self.storage_functions.add(func)
+
 
     @property
     def storage_folder(self):
@@ -45,6 +52,14 @@ class WebvizStorage:
     @use_storage.setter
     def use_storage(self, use_storage):
         self._use_storage = use_storage
+
+    @property
+    def use_azure_blob(self):
+        return self._use_azure_blob
+
+    @use_azure_blob.setter
+    def use_azure_blob(self, use_azure_blob):
+        self._use_azure_blob = use_azure_blob
 
     def register_function_arguments(self, functionarguments):
         '''The input here is from class functions `add_webvizstore(self)`
@@ -74,10 +89,27 @@ class WebvizStorage:
 
         args_as_bytes = str(argtuples).encode()
         hashed_args = str(hashlib.md5(args_as_bytes).hexdigest())
-
         filename = f'{func.__module__}-{func.__name__}-{hashed_args}'
-
+    
         return os.path.join(self.storage_folder, filename)
+
+    def file_to_blob(self, filename):
+            self.blob_service.create_blob_from_path(
+                self.blob_container, filename, filename)
+
+    def blob_to_file(self, blobname):
+        import tempfile
+        from azure.storage.blob import BlockBlobService
+
+        local_file = tempfile.NamedTemporaryFile(delete=False)
+        #Stored as Blob with full path name as name
+        blob_name = blobname
+
+
+        self.blob_service.get_blob_to_stream('webvizreek', blob_name, stream=local_file)
+
+        local_file.seek(0)
+        return local_file.name
 
     @staticmethod
     def _undecorate(func):
@@ -128,11 +160,16 @@ class WebvizStorage:
         return_type = inspect.getfullargspec(func).annotations['return']
 
         path = self._unique_path(func, WebvizStorage._dict_to_tuples(kwargs))
+        output = func(**kwargs)
 
         try:
             if return_type == pd.DataFrame:
+                if self.use_azure_blob:
+                    return pd.read_parquet(self.blob_to_file(f'{path}.parquet'))
                 return pd.read_parquet(f'{path}.parquet')
             elif return_type == pathlib.Path:
+                if self.use_azure_blob:
+                    return pathlib.Path(self.blob_to_file(f'{path}{output.suffix}'))
                 return pathlib.Path(glob.glob(f'{path}*')[0])
 
         except OSError:
@@ -153,10 +190,15 @@ class WebvizStorage:
                 output = func(**kwargs)
                 path = self._unique_path(func, argtuples)
 
+
                 if isinstance(output, pd.DataFrame):
                     output.to_parquet(f'{path}.parquet')
+                    if self.use_azure_blob:
+                        self.file_to_blob(f'{path}.parquet')
                 elif isinstance(output, pathlib.Path):
                     shutil.copy(output, f'{path}{output.suffix}')
+                    if self.use_azure_blob:
+                        self.file_to_blob(f'{path}{output.suffix}')
                 else:
                     raise ValueError(f'Unknown return type {type(output)}')
 
