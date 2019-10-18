@@ -32,7 +32,7 @@ setup(
     },
     entry_points={"console_scripts": ["webviz=webviz_config.command_line:main"]},
     install_requires=[
-        'azure-storage-blob',
+        'azure-storage-blob==1.5.0',
         "dash~=1.1",
         "bleach~=3.1",
         "cryptography~=2.4",
