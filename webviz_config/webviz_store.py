@@ -106,7 +106,7 @@ class WebvizStorage:
         blob_name = blobname
 
 
-        self.blob_service.get_blob_to_stream('webvizreek', blob_name, stream=local_file)
+        self.blob_service.get_blob_to_stream(self.blob_container, blob_name, stream=local_file)
 
         local_file.seek(0)
         return local_file.name

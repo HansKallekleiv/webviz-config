@@ -1,11 +1,13 @@
 from pathlib import Path
+
 import dash_html_components as html
-from . import WebvizContainer
-from ..webviz_assets import webviz_assets
+
+from .. import WebvizContainerABC
+from ..webviz_assets import WEBVIZ_ASSETS
 
 
-class EmbedPdf(WebvizContainer):
-    '''### Embed PDF file
+class EmbedPdf(WebvizContainerABC):
+    """### Embed PDF file
 
 This container embeds a given PDF file into the page.
 
@@ -16,21 +18,16 @@ This container embeds a given PDF file into the page.
 
 _Note_: Webviz does not scan your PDF for malicious code.
 Make sure it comes from a trusted source.
-'''
+"""
 
     def __init__(self, pdf_file: Path, height: int = 80, width: int = 100):
-        self.pdf_url = webviz_assets.add(pdf_file)
+        self.pdf_url = WEBVIZ_ASSETS.add(pdf_file)
         self.height = height
         self.width = width
 
     @property
     def layout(self):
 
-        style = {
-                 'height': f'{self.height}vh',
-                 'width': f'{self.width}%'
-                }
+        style = {"height": f"{self.height}vh", "width": f"{self.width}%"}
 
-        return html.Embed(src=self.pdf_url,
-                          style=style,
-                          type='application/pdf')
+        return html.Embed(src=self.pdf_url, style=style, type="application/pdf")

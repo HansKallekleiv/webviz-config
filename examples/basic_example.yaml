@@ -2,9 +2,6 @@
 # The configuration files uses YAML (https://en.wikipedia.org/wiki/YAML).
 
 title: Reek Webviz Demonstration
-username: some_username
-password: some_password
-
 
 pages:
 
@@ -36,10 +33,18 @@ pages:
     - container: SyntaxHighlighter
       filename: ./basic_example.yaml
 
+ - title: Tour example
+   content:
+    - container: ExampleTour
+
  - title: Plot a table
    content:
     - container: TablePlotter
       csv_file: ./example_data.csv
+      filter_cols:
+          - Well
+          - Segment
+          - Average permeability (D)
       contact_person:
         name: Ola Nordmann
         phone: +47 12345678
@@ -55,3 +60,7 @@ pages:
         y: Initial reservoir pressure (bar)
         size: Average permeability (D)
         facet_col: Segment
+      contact_person:
+        name: Kari Nordmann
+        phone: 12345678
+        email: someother@email.com
