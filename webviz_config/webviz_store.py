@@ -23,7 +23,7 @@ class WebvizStorage:
             account_name=str(os.getenv('AZURE_BLOB_ACCOUNT_NAME')),
             account_key=str(os.getenv('AZURE_BLOB_ACCOUNT_KEY')))
         self.blob_container = str(os.getenv('AZURE_BLOB_CONTAINER'))
-
+        print(self.blob_container, str(os.getenv('AZURE_BLOB_ACCOUNT_KEY')))
     def register_function(self, func):
         """This function is automatically called by the function
         decorator @webvizstore, registering the function it decorates.
