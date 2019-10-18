@@ -166,7 +166,7 @@ class WebvizStorage:
         return_type = inspect.getfullargspec(func).annotations['return']
 
         path = self._unique_path(func, WebvizStorage._dict_to_tuples(kwargs))
-        output = func(**kwargs)
+        # output = func(**kwargs)
 
         try:
             if return_type == pd.DataFrame:
@@ -175,7 +175,7 @@ class WebvizStorage:
                 return pd.read_parquet(f'{path}.parquet')
             elif return_type == pathlib.Path:
                 if self.use_azure_blob:
-                    return pathlib.Path(self.blob_to_file(f'{path}{output.suffix}'))
+                    return pathlib.Path(self.blob_to_file(f'{path}{".gri"}'))
                 return pathlib.Path(glob.glob(f'{path}*')[0])
 
         except OSError:
