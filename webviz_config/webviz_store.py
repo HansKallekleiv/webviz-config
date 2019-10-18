@@ -60,7 +60,7 @@ class WebvizStorage:
         #Stored as Blob with full path name as name
         blob_name = blobname
 
-
+        print('using blob', blob_name)
         self.blob_service.get_blob_to_stream(self.blob_container, blob_name, stream=local_file)
 
         local_file.seek(0)
