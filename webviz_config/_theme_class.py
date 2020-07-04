@@ -20,6 +20,7 @@ class WebvizConfigTheme:
                 "'unsafe-eval'",  # [2]
                 "'sha256-jZlsGVOhUAIcH+4PVs7QuGZkthRMgvT2n0ilH6/zTM0='",  # [3]
             ],
+            "worker-src": ["'self'", "'unsafe-eval'", "blob:"],
             "img-src": ["'self'", "data:"],
             "navigate-to": "'self'",
             "base-uri": "'self'",
